@@ -1,0 +1,13 @@
+{
+    "name": "wp-cli/wp-menu-import-export-cli",
+    "description": "Export and import WordPress menus from WP-CLI",
+    "type": "wp-cli-package",
+    "homepage": "https://github.com/wpbullet/wp-menu-import-export-cli",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.3.29"
+    },
+    "autoload": {
+        "files": [ "command.php" ]
+    }
+}
