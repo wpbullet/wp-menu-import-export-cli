@@ -1,6 +1,6 @@
 <?php
 
-class Menu_Command extends WP_CLI_Command {
+class WPB_Menu_Command extends WP_CLI_Command {
 
     /**
      * Handle menu import cli command and call import_json() to import menu content from a json file.
@@ -272,4 +272,4 @@ class Menu_Command extends WP_CLI_Command {
 	}
 }
 
-WP_CLI::add_command( 'menu', new Menu_Command );
+WP_CLI::add_command( 'wpb-menu', new WPB_Menu_Command );
