@@ -1,6 +1,8 @@
 WP-CLI Export & Import Menu
 =========================
 
+Forked and updated from https://github.com/lgedeon/wp-menu-import-export-cli
+
 You can export and import menus for WordPress using WP-CLI.
 
 To export a menu you just need to execute this command:
@@ -12,6 +14,11 @@ And to import a menu, this command:
 `wp wpb-menu import <file>`
 
 The `export` and `import` commands only supports JSON files.
+
+Installation
+========
+
+wp package install https://github.com/wpbullet/wp-menu-import-export-cli.git
 
 Usage
 ========
