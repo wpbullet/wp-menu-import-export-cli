@@ -1,162 +1,119 @@
 <?php
 
 class WPB_Menu_Command extends WP_CLI_Command {
-
-    /**
-     * Handle menu import cli command and call import_json() to import menu content from a json file.
+	/**
+	 * Import the exported menu JSON file.
 	 *
-	 * Still soo much to do:
-	 * - (maybe) support pasting a json object on the commandline instead of file name
-	 * - (maybe) incorporate into main cli import and export commands
-	 * - add wp-admin ui to call functions without setting up wp-cli
-	 * - support mode and missing parameters
-     *
-     * ## OPTIONS
-     *
-     * <file>
-     * : Path to a valid json file for importing.
-	 *
-	 * json object should be in the form:
-	 * [
-	 *   {
-	 *     "location" : "theme location menu should be assigned to (optional)",
-	 *     "name" : "Menu Name Required",
-	 *     "items" :
-	 *     [
-	 *       {
-	 *         "slug" : "only-required-for-nested-menu--used-to-link-to-parent",
-	 *         "parent" : "parent-menu-item-slug--parent-must-be-defined-before-children",
-	 *         "title" : "Not always required but highly recommended",
-	 *         "page" : "slug/path--only-if-menu-points-to-page",
-	 *         "taxonomy" : "only_if_pointing_to_term",
-	 *         "term" : "the Term not the slug",
-	 *         "url" : "http://domain.com/fully/qualified/" OR "/relative/"
-	 *       },
-	 *       { ... additional menu items ... }
-	 *     ]
-	 *   },
-	 *   { ... additional menus ... }
-	 * ]
-	 *
-	 * <mode>
-	 * : update = matching menus and menu items overwritten. skip = matching items skipped, missing items skipped. append = matching skipped, new items added
-	 *
-     * <missing>
-     * : Method for handling missing objects pointed to by menu. Can be 'create', 'skip', 'default'.
-	 *
-	 * <default>
-	 * : page to point to if matching slug isn't found. If default slug doesn't exist either menu items will be skipped.
-     *
-     * @synopsis <file> [--mode=<mode>] [--missing=<missing>] [--default=<default>]
-     */
-
-    public function import ( $args, $assoc_args ) {
+	 * @param $args
+	 * @param $assoc_args
+	 */
+    public function import( $args, $assoc_args ) {
         list( $file ) = $args;
 
-        if ( ! file_exists( $file ) )
-            WP_CLI::error( "File to import doesn't exist." );
+        if ( ! file_exists( $file ) ) {
+	        WP_CLI::error( 'File to import doesn\'t exist.' );
+        }
 
-        $defaults = array(
+        $defaults    = array(
             'missing' => 'skip',
             'default' => null,
         );
-        $assoc_args = wp_parse_args( $assoc_args, $defaults );
+        $assoc_args  = wp_parse_args( $assoc_args, $defaults );
+		$is_imported = $this->import_json( $file, $assoc_args['missing'], $assoc_args['default'] );
 
-		$ret = $this->import_json( $file, $assoc_args['missing'], $assoc_args['default'] );
-
-		if ( is_wp_error( $ret ) ) {
-			WP_CLI::error( $ret->get_error_message() );
-		} else {
-			WP_CLI::line();
-			WP_CLI::success( "Import complete." );
+		if ( is_wp_error( $is_imported ) ) {
+			WP_CLI::error( $is_imported->get_error_message() );
+			return;
 		}
+
+	    WP_CLI::line();
+	    WP_CLI::success( 'The import was successful.' );
 	}
 
 	/**
-	 * Import menu content from a json file.
+	 * Import menu JSON functionality.
 	 *
-	 * @param string $file Name of json file to import. (might allow just passing the json string here later)
-	 * @param string $mode - not yet implemented
-	 * @param string $missing - not yet implemented
-	 * @param string $default - not yet implemented
+	 * @param $file
+	 * @return bool
 	 */
-	public function import_json( $file, $mode = 'append', $missing = 'skip', $default = null ) {
-		$string      = file_get_contents( $file );
+	private function import_json( $file ) {
+		$encoded_json = file_get_contents( $file );
+		$decoded_json = json_decode( $encoded_json, true );
+		$locations    = get_nav_menu_locations();
+		$menus        = ! is_array( $decoded_json ) ? array( $decoded_json ) : $decoded_json;
 
-		$json_menus = json_decode( $string );
+		foreach ( $menus as $menu ) {
+			$menu_id  = $this->get_menu_id( $menu, $locations );
+			$new_menu = array();
 
-		// $json object may contain a single menu definition object or array of menu objects
-		if ( ! is_array( $json_menus ) ) {
-			$json_menus = array( $json_menus );
-		}
+			if ( null === $menu_id ) {
+				continue;
+			}
 
-		$locations = get_nav_menu_locations();
+			if ( isset( $menu['items'] ) && is_array( $menu['items'] ) ) {
+				foreach ( $menu['items'] as $item ) {
+					$menu_data = array(
+						'menu-item-title'  => isset( $item['title'] ) ? $item['title'] : false,
+						'menu-item-status' => 'publish',
+					);
 
-		foreach ( $json_menus as $menu ) :
-			if ( isset( $menu->location ) && isset( $locations[ $menu->location ] ) ) :
-				$menu_id = $locations[ $menu->location ];
-			elseif ( isset( $menu->name ) ) :
-				// If we can't find a menu by this name, create one.
-				if ( $menu_object = wp_get_nav_menu_object( $menu->name ) ) :
-					$menu_id = $menu_object->term_id;
-				else :
-					$menu_object = wp_create_nav_menu( $menu->name );
-					if ( isset( $menu_object->term_id ) ) {
-						$menu_id = $menu_object->term_id;
+					if ( isset( $item['page'] ) && $page = get_page_by_path( $item['page'] ) ) {
+						$menu_data['menu-item-type']      = 'post_type';
+						$menu_data['menu-item-object']    = 'page';
+						$menu_data['menu-item-object-id'] = $page->ID;
+						$menu_data['menu-item-title']     = $menu_data['menu-item-title'] ?: $page->post_title;
+					} elseif ( isset ( $item['taxonomy'] ) && isset( $item['term'] ) && $term = get_term_by( 'name', $item['term'], $item['taxonomy'] ) ) {
+						$menu_data['menu-item-type']      = 'taxonomy';
+						$menu_data['menu-item-object']    = $term->taxonomy;
+						$menu_data['menu-item-object-id'] = $term->term_id;
+						$menu_data['menu-item-title']     = $menu_data['menu-item-title'] ?: $term->name;
+					} elseif ( isset( $item['url'] ) ) {
+						$menu_data['menu-item-url']   = 'http' === substr( $item['url'], 0, 4 ) ? esc_url( $item['url'] ) : home_url( $item['url'] );
+						$menu_data['menu-item-title'] = $menu_data['menu-item-title'] ?: $item['url'];
 					} else {
 						continue;
 					}
-				endif;
-			else : // if no location or name is supplied, we have nowhere to put any additional info in this object.
-				continue;
-			endif;
 
-			$new_menu = array();
+					$slug              = isset( $item['slug'] ) ? $item['slug'] : sanitize_title_with_dashes( $menu_data['menu-item-title'] );
+					$new_menu[ $slug ] = array();
 
-			if ( isset ( $menu->items ) && is_array( $menu->items ) ) : foreach ( $menu->items as $item ) :
+					if ( isset( $item['parent'] ) ) {
+						$new_menu[$slug]['parent']        = $item['parent'];
+						$menu_data['menu-item-parent-id'] = isset( $new_menu[ $item['parent'] ]['id'] ) ? $new_menu[ $item['parent'] ]['id'] : 0;
+					}
 
-				// merge in existing items here
+					$new_menu[ $slug ]['id'] = wp_update_nav_menu_item( $menu_id, 0, $menu_data );
 
-				// Build $item_array from supplied data
-				$item_array = array(
-					'menu-item-title' => ( isset( $item->title ) ? $item->title : false ),
-					'menu-item-status' => 'publish'
-				);
-
-				if ( isset( $item->page ) && $page = get_page_by_path( $item->page ) ) { // @todo support lookup by title
-					$item_array['menu-item-type']      = 'post_type';
-					$item_array['menu-item-object']    = 'page';
-					$item_array['menu-item-object-id'] = $page->ID;
-					$item_array['menu-item-title']     = ( $item_array['menu-item-title'] ) ?: $page->post_title;
-				} elseif ( isset ( $item->taxonomy ) && isset( $item->term ) && $term = get_term_by( 'name', $item->term, $item->taxonomy ) ) {
-					$item_array['menu-item-type']      = 'taxonomy';
-					$item_array['menu-item-object']    = $term->taxonomy;
-					$item_array['menu-item-object-id'] = $term->term_id;
-					$item_array['menu-item-title'] = ( $item_array['menu-item-title'] ) ?: $term->name;
-				} elseif ( isset( $item->url ) ) {
-					$item_array['menu-item-url']   = ( 'http' == substr( $item->url, 0, 4 ) ) ? esc_url( $item->url ) : home_url( $item->url );
-					$item_array['menu-item-title'] = ( $item_array['menu-item-title'] ) ?: $item->url;
-				} else {
-					continue;
+					// if current user doesn't have caps to insert term (because we are doing cli) then we need to handle that here
+					wp_set_object_terms( $new_menu[ $slug ]['id'], array( $menu_id ), 'nav_menu' );
 				}
+			}
+		}
 
-				$slug  = isset( $item->slug ) ? $item->slug : sanitize_title_with_dashes( $item_array['menu-item-title'] );
-				$new_menu[$slug] = array();
+		return true;
+	}
 
-				if ( isset( $item->parent ) ) {
-					$new_menu[$slug]['parent']         = $item->parent;
-					$item_array['menu-item-parent-id'] = isset( $new_menu[ $item->parent ]['id'] ) ? $new_menu[ $item->parent ]['id'] : 0 ;
-				}
+	/**
+	 * Get the current menu id.
+	 *
+	 * @param $menu
+	 * @param $locations
+	 *
+	 * @return int|WP_Error|null
+	 */
+	private function get_menu_id( $menu, $locations ) {
+		$menu_id = null;
 
-				$new_menu[$slug]['id'] = wp_update_nav_menu_item($menu_id, 0, $item_array );
+		if ( isset( $menu['location'] ) && isset( $locations[ $menu['location'] ] ) ) {
+			return $locations[ $menu['location'] ];
+		}
 
-				// if current user doesn't have caps to insert term (because we are doing cli) then we need to handle that here
-				wp_set_object_terms( $new_menu[$slug]['id'], array( (int) $menu_id ), 'nav_menu' );
+		if ( isset( $menu['name'] ) ) {
+			$nav_menu_object = wp_get_nav_menu_object( $menu['name'] );
+			$menu_id         = $nav_menu_object ? $nav_menu_object->term_id : wp_create_nav_menu( $menu['name'] );
+		}
 
-			endforeach; endif;
-
-
-		endforeach;
+		return $menu_id;
 	}
 
     /**
