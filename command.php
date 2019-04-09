@@ -78,7 +78,7 @@ class WPB_Menu_Command extends WP_CLI_Command {
 					$new_menu[ $slug ] = array();
 
 					if ( isset( $item['parent'] ) ) {
-						$new_menu[$slug]['parent']        = $item['parent'];
+						$new_menu[ $slug ]['parent']      = $item['parent'];
 						$menu_data['menu-item-parent-id'] = isset( $new_menu[ $item['parent'] ]['id'] ) ? $new_menu[ $item['parent'] ]['id'] : 0;
 					}
 
@@ -105,7 +105,12 @@ class WPB_Menu_Command extends WP_CLI_Command {
 		$menu_id = null;
 
 		if ( isset( $menu['location'] ) && isset( $locations[ $menu['location'] ] ) ) {
-			return $locations[ $menu['location'] ];
+			$location_id     = $locations[ $menu['location'] ];
+			$nav_menu_object = wp_get_nav_menu_object( $location_id );
+
+			if ( $nav_menu_object ) {
+				return $locations[ $menu['location'] ];
+			}
 		}
 
 		if ( isset( $menu['name'] ) ) {
