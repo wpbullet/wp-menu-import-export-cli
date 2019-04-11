@@ -71,7 +71,8 @@ class WPB_Menu_Command extends WP_CLI_Command {
 						$menu_data['menu-item-url']   = 'http' === substr( $item['url'], 0, 4 ) ? esc_url( $item['url'] ) : home_url( $item['url'] );
 						$menu_data['menu-item-title'] = $menu_data['menu-item-title'] ?: $item['url'];
 					} else {
-						continue;
+						// Without this continue, we are able to export all menus, no matter what.
+						// continue;
 					}
 
 					$slug              = isset( $item['slug'] ) ? $item['slug'] : sanitize_title_with_dashes( $menu_data['menu-item-title'] );
