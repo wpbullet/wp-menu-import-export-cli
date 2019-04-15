@@ -1,25 +1,32 @@
 <?php
 
+/**
+ * Import functionality trait.
+ */
+require 'includes/import/trait-import.php';
+
+/**
+ * Export and import main class.
+ */
 class WPB_Menu_Command extends WP_CLI_Command {
+	/**
+	 * Import menu functionality.
+	 */
+	use WPB_Menu_Import;
+
 	/**
 	 * Import the exported menu JSON file.
 	 *
 	 * @param $args
-	 * @param $assoc_args
 	 */
-    public function import( $args, $assoc_args ) {
-        list( $file ) = $args;
+    public function import( $args ) {
+	    list( $file ) = $args;
 
         if ( ! file_exists( $file ) ) {
 	        WP_CLI::error( 'File to import doesn\'t exist.' );
         }
 
-        $defaults    = array(
-            'missing' => 'skip',
-            'default' => null,
-        );
-        $assoc_args  = wp_parse_args( $assoc_args, $defaults );
-		$is_imported = $this->import_json( $file, $assoc_args['missing'], $assoc_args['default'] );
+		$is_imported = $this->start_import( $file );
 
 		if ( is_wp_error( $is_imported ) ) {
 			WP_CLI::error( $is_imported->get_error_message() );
@@ -30,105 +37,25 @@ class WPB_Menu_Command extends WP_CLI_Command {
 	    WP_CLI::success( 'The import was successful.' );
 	}
 
-	/**
-	 * Import menu JSON functionality.
-	 *
-	 * @param $file
-	 * @return bool
-	 */
-	private function import_json( $file ) {
-		$encoded_json = file_get_contents( $file );
-		$decoded_json = json_decode( $encoded_json, true );
-		$locations    = get_nav_menu_locations();
-		$menus        = ! is_array( $decoded_json ) ? array( $decoded_json ) : $decoded_json;
-
-		foreach ( $menus as $menu ) {
-			$menu_id  = $this->get_menu_id( $menu, $locations );
-			$new_menu = array();
-
-			if ( null === $menu_id ) {
-				continue;
-			}
-
-			if ( isset( $menu['items'] ) && is_array( $menu['items'] ) ) {
-				foreach ( $menu['items'] as $item ) {
-					$menu_data = array(
-						'menu-item-title'  => isset( $item['title'] ) ? $item['title'] : false,
-						'menu-item-status' => 'publish',
-					);
-
-					if ( isset( $item['page'] ) && $page = get_page_by_path( $item['page'] ) ) {
-						$menu_data['menu-item-type']      = 'post_type';
-						$menu_data['menu-item-object']    = 'page';
-						$menu_data['menu-item-object-id'] = $page->ID;
-						$menu_data['menu-item-title']     = $menu_data['menu-item-title'] ?: $page->post_title;
-					} elseif ( isset ( $item['taxonomy'] ) && isset( $item['term'] ) && $term = get_term_by( 'name', $item['term'], $item['taxonomy'] ) ) {
-						$menu_data['menu-item-type']      = 'taxonomy';
-						$menu_data['menu-item-object']    = $term->taxonomy;
-						$menu_data['menu-item-object-id'] = $term->term_id;
-						$menu_data['menu-item-title']     = $menu_data['menu-item-title'] ?: $term->name;
-					} elseif ( isset( $item['url'] ) ) {
-						$menu_data['menu-item-url']   = 'http' === substr( $item['url'], 0, 4 ) ? esc_url( $item['url'] ) : home_url( $item['url'] );
-						$menu_data['menu-item-title'] = $menu_data['menu-item-title'] ?: $item['url'];
-					} else {
-						// Without this continue, we are able to export all menus, no matter what.
-						// continue;
-					}
-
-					$slug              = isset( $item['slug'] ) ? $item['slug'] : sanitize_title_with_dashes( $menu_data['menu-item-title'] );
-					$new_menu[ $slug ] = array();
-
-					if ( isset( $item['parent'] ) ) {
-						$new_menu[ $slug ]['parent']      = $item['parent'];
-						$menu_data['menu-item-parent-id'] = isset( $new_menu[ $item['parent'] ]['id'] ) ? $new_menu[ $item['parent'] ]['id'] : 0;
-					}
-
-					$new_menu[ $slug ]['id'] = wp_update_nav_menu_item( $menu_id, 0, $menu_data );
-
-					// if current user doesn't have caps to insert term (because we are doing cli) then we need to handle that here
-					wp_set_object_terms( $new_menu[ $slug ]['id'], array( $menu_id ), 'nav_menu' );
-				}
-			}
-		}
-
-		return true;
-	}
-
-	/**
-	 * Get the current menu id.
-	 *
-	 * @param $menu
-	 * @param $locations
-	 *
-	 * @return int|WP_Error|null
-	 */
-	private function get_menu_id( $menu, $locations ) {
-		$menu_id = null;
-
-		if ( isset( $menu['location'] ) && isset( $locations[ $menu['location'] ] ) ) {
-			$location_id     = $locations[ $menu['location'] ];
-			$nav_menu_object = wp_get_nav_menu_object( $location_id );
-
-			if ( $nav_menu_object ) {
-				return $locations[ $menu['location'] ];
-			}
-		}
-
-		if ( isset( $menu['name'] ) ) {
-			$nav_menu_object = wp_get_nav_menu_object( $menu['name'] );
-			$menu_id         = $nav_menu_object ? $nav_menu_object->term_id : wp_create_nav_menu( $menu['name'] );
-		}
-
-		return $menu_id;
-	}
-
     /**
-     * Handle menu export cli command and call export_json() to export menu content to a json file.
+     * Start menu export using WP-CLI. The result will be a JSON file.
 	 *
      * ## OPTIONS
      *
      * <file>
-     * : Path to export to.
+     * : File name to export the menu data as JSON.
+     *
+     * (wp menu export <menu-name>)
+     * (wp menu export --all)
+     *
+     * [--all]
+     * : Export all WordPress menus.
+     *
+     * [--menus[=<value>]]
+     * : Specify the menu to be exported into the JSON file.
+     *
+     * ## EXAMPLES
+     * wp menu export exported-menu.json
 	 *
 	 * json object will be in the form:
 	 * [
@@ -158,15 +85,13 @@ class WPB_Menu_Command extends WP_CLI_Command {
      *
      * @synopsis <file> [--mode=<mode>]
      */
-
-    public function export ( $args, $assoc_args ) {
+    public function export( $args, $assoc_args ) {
         list( $file ) = $args;
 
-        $defaults = array(
+        $defaults   = array(
             'mode' => 'absolute',
         );
         $assoc_args = wp_parse_args( $assoc_args, $defaults );
-
 		$ret = $this->export_json( $file, $assoc_args['mode'] );
 
 		if ( is_wp_error( $ret ) ) {
@@ -206,18 +131,21 @@ class WPB_Menu_Command extends WP_CLI_Command {
 
 				switch ( $item->type ) :
 					case 'custom':
+						$export_item['type'] = 'custom';
 						$export_item['url'] = $item->url;
 						break;
 					case 'post_type':
 						if ( 'page' == $item->object ) {
 							$page = get_post( $item->object_id );
+							$export_item['type']     = 'post_type';
 							$export_item['page'] = $page->post_name;
 						}
 						break;
 					case 'taxonomy':
 						$term = get_term( $item->object_id, $item->object );
 						$export_item['taxonomy'] = $term->taxonomy;
-						$export_item['term']     = $term->name;
+						$export_item['type']     = 'taxonomy';
+						$export_item['term']     = $term->term_id;
 						break;
 				endswitch;
 
@@ -235,4 +163,4 @@ class WPB_Menu_Command extends WP_CLI_Command {
 	}
 }
 
-WP_CLI::add_command( 'wpb-menu', new WPB_Menu_Command );
+WP_CLI::add_command( 'wpb-menu', 'WPB_Menu_Command');
