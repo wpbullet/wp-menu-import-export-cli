@@ -6,16 +6,21 @@ trait WPB_Menu_Import {
 	 *
 	 * @param  string   $file   The current JSON file to import.
 	 *
-	 * @return bool             Whether is imported or not.
+	 * @return array|WP_Error   Whether is imported or not.
 	 */
-	private function start_import( $file ) {
+	private function import( $file ) {
+		WP_CLI::log( 'Starting import menu process...' );
+		WP_CLI::warning( 'The import process might not work properly if you use --skip-plugins flag.' );
+
 		$decoded_json = json_decode( file_get_contents( $file ), true );
 		$locations    = get_nav_menu_locations();
 		$menus        = ! is_array( $decoded_json ) ? array( $decoded_json ) : $decoded_json;
 
-		array_map( array( $this, 'start_set_menu_item' ), $menus, $locations );
+		if ( empty( $menus ) || null === $menus[0] ) {
+			return new WP_Error( 'no-menus', 'The file is empty.' );
+		}
 
-		return true;
+		return array_map( array( $this, 'start_set_menu_item' ), $menus, $locations );
 	}
 
 	/**
@@ -28,7 +33,8 @@ trait WPB_Menu_Import {
 		$menu_id  = $this->get_menu_id( $menu, $locations );
 		$new_menu = array();
 
-		if ( null === $menu_id ) {
+		if ( null === $menu_id[0] ) {
+			WP_CLI::log( 'Something went wrong with "' . $menu['name'] . '" menu.' );
 			return;
 		}
 
@@ -45,6 +51,7 @@ trait WPB_Menu_Import {
 			$menu_data_raw       = $this->$get_method( $menu_item, $menu_data_defaults );
 
 			if ( empty( $menu_data_raw ) ) {
+				WP_CLI::log( 'The submenu item "' . $menu_item['title'] . '" does not have any data.' );
 				continue;
 			}
 
@@ -59,7 +66,10 @@ trait WPB_Menu_Import {
 
 			$new_menu[ $slug ]['id'] = wp_update_nav_menu_item( $menu_id[0], 0, $menu_data );
 
-			// if current user doesn't have caps to insert term (because we are doing cli) then we need to handle that here
+			/**
+			 * If current user does not have caps to insert
+			 * terms (because we are doing CLI) then we need to handle that here.
+			 */
 			wp_set_object_terms( $new_menu[ $slug ]['id'], $menu_id, 'nav_menu' );
 		}
 	}
