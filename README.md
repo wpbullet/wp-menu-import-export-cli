@@ -1,34 +1,76 @@
-WP-CLI Export & Import Menu
-=========================
+wp-cli/wp-menu-import-export-cli
+================================
 
 Forked and updated from https://github.com/lgedeon/wp-menu-import-export-cli
 
-You can export and import menus for WordPress using WP-CLI.
+Export and import menus for WordPress using WP-CLI.
 
-To export a menu you just need to execute this command:
+Quick links: [Export](#wp-menu-export) | [Import](#wp-menu-import)
 
-`wp wpb-menu export <file>`
-  
-And to import a menu, this command:
+## Installation
 
-`wp wpb-menu import <file>`
-
-The `export` and `import` commands only supports JSON files.
-
-Installation
-========
-
+~~~~
 wp package install https://github.com/wpbullet/wp-menu-import-export-cli.git
+~~~~
 
-Usage
-========
+## Using
 
-Just execute to export the menu into a JSON file:
+This package implements the following commands:
 
-`wp wpb-menu export my_filename.json`
+#### wp menu export
 
-This will generate a JSON file that contains your exported menu.
+Export a WordPress Menu.
 
-To import the menu you just need to:
+~~~~
+wp menu export <menu>... [--all] [--filename[=<value>]]
+~~~~
 
-`wp wpb-menu import my_filename.json`
+**OPTIONS**
+
+    <menu>...
+		The name, slug or term ID for the menu(s).
+
+	[--all]
+		Export all WordPress menus.
+
+	[--filename[=<value>]]
+		Specify the file name.
+
+**EXAMPLES**
+
+     # Export all menus.
+     $ wp menu export --all
+     
+     # Export menus by name.
+     $ wp menu export "My Awesome Menu" "Mobile Menu"
+     
+     # Export menus by term id.
+     $ wp menu export 80 81 82
+     
+     # Export menus by slug.
+     $ wp menu export menu-slug-1 menu-slug-2
+     
+     # Export all menus with a custom file name.
+     $ wp menu export --all --filename="custom-filename.json"
+
+**WARNING**
+
+`<menu>` option and `--all` flag cannot be used together.
+
+#### wp menu import
+
+Import a WordPress Menu.
+
+~~~~
+wp menu import <file>
+~~~~
+
+**OPTIONS**
+
+    <file>
+		The exported menu JSON file.
+
+**EXAMPLES**
+
+     # Import a menu.
+     $ wp menu import my-menu.json

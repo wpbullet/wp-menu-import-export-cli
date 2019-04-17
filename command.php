@@ -29,7 +29,8 @@ class WPB_Import_Menu_Command extends WP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp menu import my-menu.json
+	 *     # Import a menu.
+	 *     $ wp menu import my-menu.json
 	 */
 	public function __invoke( $args ) {
 		list( $file ) = $args;
@@ -59,7 +60,7 @@ class WPB_Export_Menu_Command extends WP_CLI_Command {
 	use WPB_Menu_Export;
 
     /**
-     * Start menu export using WP-CLI. The result will be a JSON file.
+     * Export a WordPress Menu.
 	 *
      * ## OPTIONS
      *
