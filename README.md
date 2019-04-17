@@ -17,7 +17,7 @@ wp package install https://github.com/wpbullet/wp-menu-import-export-cli.git
 
 This package implements the following commands:
 
-#### wp menu export
+### wp menu export
 
 Export a WordPress Menu.
 
@@ -57,7 +57,7 @@ wp menu export <menu>... [--all] [--filename[=<value>]]
 
 `<menu>` option and `--all` flag cannot be used together.
 
-#### wp menu import
+### wp menu import
 
 Import a WordPress Menu.
 
