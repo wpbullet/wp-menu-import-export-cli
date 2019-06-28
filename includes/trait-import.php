@@ -100,7 +100,7 @@ trait WPB_Menu_Import {
 		$url = $menu_item['url'];
 
 		return array(
-			'menu-item-url' => 'http' === substr( $url, 0, 4 ) ? esc_url( $url ) : home_url( $url ),
+			'menu-item-url'   => 'http' === substr( $url, 0, 4 ) ? esc_url( $url ) : home_url( $url ),
 			'menu-item-title' => $defaults['menu-item-title'] ?: $menu_item['url'],
 		);
 	}
