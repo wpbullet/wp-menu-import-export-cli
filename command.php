@@ -109,5 +109,5 @@ $export_synopsis = array(
 	),
 );
 
-WP_CLI::add_command( 'menu import', 'WPB_Import_Menu_Command');
+WP_CLI::add_command( 'menu import', 'WPB_Import_Menu_Command' );
 WP_CLI::add_command( 'menu export', 'WPB_Export_Menu_Command', $export_synopsis );

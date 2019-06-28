@@ -123,17 +123,22 @@ trait WPB_Menu_Import {
 	 * @return array               The menu data.
 	 */
 	private function get_menu_data_by_post_type( $menu_item, $defaults ) {
-		$page = get_page_by_path( $menu_item['page'] );
+		$pages = get_posts( array(
+			'name'        => $menu_item['page'],
+			'post_type'   => 'page',
+			'post_status' => 'publish',
+			'numberposts' => 1,
+		) );
 
-		if ( ! $page ) {
+		if ( empty( $pages ) ) {
 			return array();
 		}
 
 		return array(
 			'menu-item-type'      => 'post_type',
 			'menu-item-object'    => 'page',
-			'menu-item-object-id' => $page->ID,
-			'menu-item-title'     => $defaults['menu-item-title'] ?: $page->post_title,
+			'menu-item-object-id' => $pages[0]->ID,
+			'menu-item-title'     => $defaults['menu-item-title'] ?: $pages[0]->post_title,
 		);
 	}
 
