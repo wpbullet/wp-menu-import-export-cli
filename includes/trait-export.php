@@ -45,23 +45,20 @@ trait WPB_Menu_Export {
 					'slug'   => $item->ID,
 					'parent' => $item->menu_item_parent,
 					'title'  => $item->title,
+					'type'   => $item->type,
 				);
 
 				switch ( $item->type ) {
 					case 'custom':
-						$export_item['type'] = 'custom';
-						$export_item['url']  = $item->url;
+						$export_item['url'] = $item->url;
 						break;
 					case 'post_type':
-						if ( 'page' === $item->object ) {
-							$page                = get_post( $item->object_id );
-							$export_item['type'] = 'post_type';
-							$export_item['page'] = $page->post_name;
-						}
+						$post                     = get_post( $item->object_id );
+						$export_item['page']      = $post->post_name;
+						$export_item['post_type'] = $post->post_type;
 						break;
 					case 'taxonomy':
 						$term                    = get_term( $item->object_id, $item->object );
-						$export_item['type']     = 'taxonomy';
 						$export_item['taxonomy'] = $term->taxonomy;
 						$export_item['term']     = $term->term_id;
 						break;

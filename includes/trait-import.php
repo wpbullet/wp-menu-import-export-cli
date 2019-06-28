@@ -125,7 +125,7 @@ trait WPB_Menu_Import {
 	private function get_menu_data_by_post_type( $menu_item, $defaults ) {
 		$pages = get_posts( array(
 			'name'        => $menu_item['page'],
-			'post_type'   => 'page',
+			'post_type'   => $menu_item['post_type'],
 			'post_status' => 'publish',
 			'numberposts' => 1,
 		) );
