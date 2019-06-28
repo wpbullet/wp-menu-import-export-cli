@@ -12,28 +12,27 @@ trait WPB_Menu_Import {
 		WP_CLI::log( 'Starting import menu process...' );
 		WP_CLI::warning( 'The import process might not work properly if you use --skip-plugins flag.' );
 
-		$decoded_json = json_decode( file_get_contents( $file ), true );
-		$locations    = get_nav_menu_locations();
-		$menus        = ! is_array( $decoded_json ) ? array( $decoded_json ) : $decoded_json;
+		$this->locations = get_nav_menu_locations();
+		$decoded_json    = json_decode( file_get_contents( $file ), true );
+		$menus           = ! is_array( $decoded_json ) ? array( $decoded_json ) : $decoded_json;
 
 		if ( empty( $menus ) || null === $menus[0] ) {
 			return new WP_Error( 'no-menus', 'The file is empty.' );
 		}
 
-		return array_map( array( $this, 'start_set_menu_item' ), $menus, $locations );
+		return array_map( array( $this, 'start_set_menu_item' ), $menus );
 	}
 
 	/**
 	 * Start to set the menu items.
 	 *
-	 * @param array   $menu        The menu item container.
-	 * @param array   $locations   The WordPress menu locations.
+	 * @param array   $menu   The menu item container.
 	 */
-	private function start_set_menu_item( $menu, $locations ) {
-		$menu_id  = $this->get_menu_id( $menu, $locations );
+	private function start_set_menu_item( $menu ) {
+		$menu_id  = $this->get_menu_id( $menu );
 		$new_menu = array();
 
-		if ( null === $menu_id[0] ) {
+		if ( null === $menu_id ) {
 			WP_CLI::log( 'Something went wrong with "' . $menu['name'] . '" menu.' );
 			return;
 		}
@@ -64,14 +63,29 @@ trait WPB_Menu_Import {
 				$menu_data['menu-item-parent-id'] = isset( $new_menu[ $menu_item['parent'] ]['id'] ) ? $new_menu[ $menu_item['parent'] ]['id'] : 0;
 			}
 
-			$new_menu[ $slug ]['id'] = wp_update_nav_menu_item( $menu_id[0], 0, $menu_data );
+			$new_menu[ $slug ]['id'] = wp_update_nav_menu_item( $menu_id, 0, $menu_data );
 
 			/**
 			 * If current user does not have caps to insert
 			 * terms (because we are doing CLI) then we need to handle that here.
 			 */
-			wp_set_object_terms( $new_menu[ $slug ]['id'], $menu_id, 'nav_menu' );
+			wp_set_object_terms( $new_menu[ $slug ]['id'], array( $menu_id ), 'nav_menu' );
 		}
+
+		$this->set_menu_location( $menu_id, $menu['location'] );
+	}
+
+	/**
+	 * Set the menu locations.
+	 *
+	 * @param integer   $menu_id    The current menu id.
+	 * @param string    $location   The current menu location.
+	 */
+	private function set_menu_location( $menu_id, $location ) {
+		$locations              = get_theme_mod( 'nav_menu_locations' );
+		$locations[ $location ] = $menu_id;
+
+		set_theme_mod( 'nav_menu_locations', $locations );
 	}
 
 	/**
@@ -145,20 +159,19 @@ trait WPB_Menu_Import {
 	/**
 	 * Get the current menu id.
 	 *
-	 * @param array   $menu        The current menu to get the id.
-	 * @param array   $locations   The current WordPress nav locations.
+	 * @param array   $menu   The current menu to get the id.
 	 *
-	 * @return array|WP_Error|null
+	 * @return integer|WP_Error|null
 	 */
-	private function get_menu_id( $menu, $locations ) {
+	private function get_menu_id( $menu ) {
 		$menu_id = null;
 
-		if ( isset( $menu['location'] ) && isset( $locations[ $menu['location'] ] ) ) {
-			$location_id     = $locations[ $menu['location'] ];
+		if ( isset( $menu['location'], $this->locations[ $menu['location'] ] ) ) {
+			$location_id     = $this->locations[ $menu['location'] ];
 			$nav_menu_object = wp_get_nav_menu_object( $location_id );
 
 			if ( $nav_menu_object ) {
-				return $locations[ $menu['location'] ];
+				return $this->locations[ $menu['location'] ];
 			}
 		}
 
@@ -167,6 +180,6 @@ trait WPB_Menu_Import {
 			$menu_id         = $nav_menu_object ? $nav_menu_object->term_id : wp_create_nav_menu( $menu['name'] );
 		}
 
-		return array( $menu_id );
+		return $menu_id;
 	}
 }

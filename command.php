@@ -20,6 +20,13 @@ class WPB_Import_Menu_Command extends WP_CLI_Command {
 	use WPB_Menu_Import;
 
 	/**
+	 * Contains all menu locations.
+	 *
+	 * @var   array   $locations   The menu locations.
+	 */
+	protected $locations;
+
+	/**
 	 * Start menu import using WP-CLI.
 	 *
 	 * ## OPTIONS
