@@ -74,3 +74,7 @@ wp menu import <file>
 
      # Import a menu.
      $ wp menu import my-menu.json
+
+## Limitations
+
+Custom links used in menu items will not be magically turned into the local domain's version since there is no way to determine if the custom links belong to the local site or a foreign one. You will have to do a search and replace on them instead.
