@@ -99,7 +99,10 @@ trait WPB_Menu_Import {
 			return;
 		}
 
-		$menu_deleted = WP_CLI::runcommand( 'menu delete ' . $menu['slug'], array( 'return' => true ) );
+		$menu_deleted = WP_CLI::runcommand( 'menu delete ' . $menu['slug'], array(
+			'return'     => true,
+			'exit_error' => false,
+		) );
 
 		if ( ! strpos( $menu_deleted, 'Success' ) ) {
 			return;
