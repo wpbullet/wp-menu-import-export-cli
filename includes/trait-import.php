@@ -213,7 +213,7 @@ trait WPB_Menu_Import {
 	private function get_menu_id( $menu ) {
 		$menu_id = null;
 
-		if ( isset( $menu['location'], $this->locations[ $menu['location'] ] ) ) {
+		if ( ! is_bool( $menu['location'] ) && isset( $menu['location'], $this->locations[ $menu['location'] ] ) ) {
 			$location_id     = $this->locations[ $menu['location'] ];
 			$nav_menu_object = wp_get_nav_menu_object( $location_id );
 
