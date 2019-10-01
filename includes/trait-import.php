@@ -70,6 +70,7 @@ trait WPB_Menu_Import {
 				$menu_data['menu-item-parent-id'] = isset( $new_menu[ $menu_item['parent'] ]['id'] ) ? $new_menu[ $menu_item['parent'] ]['id'] : 0;
 			}
 
+			// Set the menu items and get the nav menu item ID.
 			$new_menu[ $slug ]['id'] = wp_update_nav_menu_item( $menu_id, 0, $menu_data );
 
 			/**
@@ -117,10 +118,14 @@ trait WPB_Menu_Import {
 	 * @since  0.1.0
 	 * @access private
 	 *
-	 * @param  integer   $menu_id    The current menu id.
-	 * @param  string    $location   The current menu location.
+	 * @param  integer               $menu_id    The current menu id.
+	 * @param  string|int|boolean    $location   The current menu location.
 	 */
 	private function set_menu_location( $menu_id, $location ) {
+		if ( is_bool( $location ) ) {
+			return;
+		}
+
 		$locations              = get_theme_mod( 'nav_menu_locations' );
 		$locations[ $location ] = $menu_id;
 
