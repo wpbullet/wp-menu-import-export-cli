@@ -4,9 +4,14 @@ trait WPB_Menu_Export {
 	/**
 	 * Main export functionality.
 	 *
+	 * Before start it will run some conditions to validate the
+	 * passed options in the command.
+	 *
+	 * @since  0.1.0
+	 * @access private
+	 *
 	 * @param  array   $args         The required arguments.
 	 * @param  array   $assoc_args   The flags arguments.
-	 *
 	 * @return bool|int|WP_Error     Errors or file size if success.
 	 */
 	private function export( $args, $assoc_args ) {
@@ -83,9 +88,11 @@ trait WPB_Menu_Export {
 	 * If user specify "--all" flag, it will export all menus but
 	 * if any menu is specified will only return that object.
 	 *
+	 * @since  0.1.0
+	 * @access private
+	 *
 	 * @param  array   $raw_menus    The raw menus to be exported.
 	 * @param  array   $assoc_args   The flags arguments.
-	 *
 	 * @return array                 The menus to be exported.
 	 */
 	private function get_menus( $raw_menus, $assoc_args ) {
@@ -113,6 +120,9 @@ trait WPB_Menu_Export {
 	/**
 	 * Get the default filename.
 	 * The filename structure is {hostname}-exported-menu-{todayDate}.json
+	 *
+	 * @since  0.1.0
+	 * @access private
 	 *
 	 * @return string   Default filename.
 	 */

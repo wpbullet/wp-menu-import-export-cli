@@ -4,8 +4,10 @@ trait WPB_Menu_Import {
 	/**
 	 * Import menu JSON main functionality.
 	 *
-	 * @param  string   $file   The current JSON file to import.
+	 * @since  0.1.0
+	 * @access private
 	 *
+	 * @param  string   $file   The current JSON file to import.
 	 * @return array|WP_Error   Whether is imported or not.
 	 */
 	private function import( $file ) {
@@ -26,7 +28,10 @@ trait WPB_Menu_Import {
 	/**
 	 * Start to set the menu items.
 	 *
-	 * @param array   $menu   The menu item container.
+	 * @since  0.1.0
+	 * @access private
+	 *
+	 * @param  array   $menu   The menu item container.
 	 */
 	private function start_set_menu_item( $menu ) {
 		$this->delete_menu( $menu );
@@ -84,9 +89,10 @@ trait WPB_Menu_Import {
 	 * This method functionality will work when the user
 	 * pass "--overwrite" option into the WP CLI command.
 	 *
-	 * @since 0.1.1
+	 * @since  0.1.1
+	 * @access private
 	 *
-	 * @param array   $menu   The current menu data.
+	 * @param  array   $menu   The current menu data.
 	 */
 	private function delete_menu( $menu ) {
 		if ( ! $this->overwrite_menus ) {
@@ -105,8 +111,11 @@ trait WPB_Menu_Import {
 	/**
 	 * Set the menu locations.
 	 *
-	 * @param integer   $menu_id    The current menu id.
-	 * @param string    $location   The current menu location.
+	 * @since  0.1.0
+	 * @access private
+	 *
+	 * @param  integer   $menu_id    The current menu id.
+	 * @param  string    $location   The current menu location.
 	 */
 	private function set_menu_location( $menu_id, $location ) {
 		$locations              = get_theme_mod( 'nav_menu_locations' );
@@ -118,10 +127,12 @@ trait WPB_Menu_Import {
 	/**
 	 * Get menu data by custom url.
 	 *
-	 * @param array   $menu_item   The current menu item data.
-	 * @param array   $defaults    The default values.
+	 * @since  0.1.0
+	 * @access private
 	 *
-	 * @return array               The menu data.
+	 * @param  array   $menu_item   The current menu item data.
+	 * @param  array   $defaults    The default values.
+	 * @return array                The menu data.
 	 */
 	private function get_menu_data_by_custom( $menu_item, $defaults ) {
 		$url = $menu_item['url'];
@@ -135,10 +146,12 @@ trait WPB_Menu_Import {
 	/**
 	 * Get menu data by taxonomy.
 	 *
-	 * @param array   $menu_item   The current menu item data.
-	 * @param array   $defaults    The default values.
+	 * @since  0.1.0
+	 * @access private
 	 *
-	 * @return array               The menu data.
+	 * @param  array   $menu_item   The current menu item data.
+	 * @param  array   $defaults    The default values.
+	 * @return array                The menu data.
 	 */
 	private function get_menu_data_by_taxonomy( $menu_item, $defaults ) {
 		$term = get_term_by( 'name', $menu_item['term'], $menu_item['taxonomy'] );
@@ -158,10 +171,12 @@ trait WPB_Menu_Import {
 	/**
 	 * Get menu data by post type.
 	 *
-	 * @param array   $menu_item   The current menu item data.
-	 * @param array   $defaults    The default values.
+	 * @since  0.1.0
+	 * @access private
 	 *
-	 * @return array               The menu data.
+	 * @param  array   $menu_item   The current menu item data.
+	 * @param  array   $defaults    The default values.
+	 * @return array                The menu data.
 	 */
 	private function get_menu_data_by_post_type( $menu_item, $defaults ) {
 		$pages = get_posts( array(
@@ -186,9 +201,11 @@ trait WPB_Menu_Import {
 	/**
 	 * Get the current menu id.
 	 *
-	 * @param array   $menu   The current menu to get the id.
+	 * @since  0.1.0
+	 * @access private
 	 *
-	 * @return integer|WP_Error|null
+	 * @param  array   $menu           The current menu to get the id.
+	 * @return integer|WP_Error|null   The current menu id.
 	 */
 	private function get_menu_id( $menu ) {
 		$menu_id = null;

@@ -7,18 +7,22 @@ require 'includes/trait-import.php';
 require 'includes/trait-export.php';
 
 /**
- * Import Menu Class.
+ * Import a WordPress menus from the exported JSON file
+ * that generated the "wp menu export" command.
+ *
+ * @since 0.1.0
  */
 class WPB_Import_Menu_Command extends WP_CLI_Command {
-	/**
-	 * Import menu functionality.
-	 */
+	// Menu import functionality trait.
 	use WPB_Menu_Import;
 
 	/**
 	 * Contains all menu locations.
 	 *
-	 * @var   array   $locations   The menu locations.
+	 * @since  0.1.0
+	 * @access protected
+	 *
+	 * @var    array   $locations   The menu locations.
 	 */
 	protected $locations;
 
@@ -74,12 +78,13 @@ class WPB_Import_Menu_Command extends WP_CLI_Command {
 }
 
 /**
- * Export Menu Class.
+ * Export the WordPress menus into a JSON file that will
+ * be used later to import.
+ *
+ * @since 0.1.0
  */
 class WPB_Export_Menu_Command extends WP_CLI_Command {
-	/**
-	 * Export menu functionality.
-	 */
+	// Menu import functionality trait.
 	use WPB_Menu_Export;
 
     /**
