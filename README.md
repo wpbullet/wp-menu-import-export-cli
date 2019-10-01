@@ -62,18 +62,24 @@ wp menu export <menu>... [--all] [--filename[=<value>]]
 Import a WordPress Menu.
 
 ~~~~
-wp menu import <file>
+wp menu import <file> [--overwrite]
 ~~~~
 
 **OPTIONS**
 
     <file>
 		The exported menu JSON file.
+		
+    [--overwrite]
+            Overwrite the existent menus.
 
 **EXAMPLES**
 
      # Import a menu.
      $ wp menu import my-menu.json
+     
+     # Import a menu with overriding the existent ones.
+     $ wp menu import my-menu.json --overwrite
 
 ## Limitations
 

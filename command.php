@@ -45,7 +45,7 @@ class WPB_Import_Menu_Command extends WP_CLI_Command {
 	 * : The exported menu JSON file.
 	 *
 	 * [--overwrite]
-	 * : Overwrite the existent menus
+	 * : Overwrite the existent menus.
 	 *
 	 * ## EXAMPLES
 	 *
