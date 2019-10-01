@@ -29,6 +29,8 @@ trait WPB_Menu_Import {
 	 * @param array   $menu   The menu item container.
 	 */
 	private function start_set_menu_item( $menu ) {
+		$this->delete_menu( $menu );
+
 		$menu_id  = $this->get_menu_id( $menu );
 		$new_menu = array();
 
@@ -73,6 +75,31 @@ trait WPB_Menu_Import {
 		}
 
 		$this->set_menu_location( $menu_id, $menu['location'] );
+	}
+
+	/**
+	 * Delete the current menu so the import won't duplicate
+	 * the entries.
+	 *
+	 * This method functionality will work when the user
+	 * pass "--overwrite" option into the WP CLI command.
+	 *
+	 * @since 0.1.1
+	 *
+	 * @param array   $menu   The current menu data.
+	 */
+	private function delete_menu( $menu ) {
+		if ( ! $this->overwrite_menus ) {
+			return;
+		}
+
+		$menu_deleted = WP_CLI::runcommand( 'menu delete ' . $menu['slug'], array( 'return' => true ) );
+
+		if ( ! strpos( $menu_deleted, 'Success' ) ) {
+			return;
+		}
+
+		WP_CLI::warning('The menu "' . $menu['name'] . '" was overwritten.');
 	}
 
 	/**

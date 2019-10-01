@@ -1,13 +1,9 @@
 <?php
 
-/**
- * Import functionality trait.
- */
+// Menu import functionality trait.
 require 'includes/trait-import.php';
 
-/**
- * Export functionality trait.
- */
+// Menu export functionality trait.
 require 'includes/trait-export.php';
 
 /**
@@ -27,6 +23,16 @@ class WPB_Import_Menu_Command extends WP_CLI_Command {
 	protected $locations;
 
 	/**
+	 * Whether to overwrite the menus.
+	 *
+	 * @since  0.1.0
+	 * @access protected
+	 *
+	 * @var    boolean   $overwrite_menus   Whether to overwrite the menus.
+	 */
+	protected $overwrite_menus;
+
+	/**
 	 * Start menu import using WP-CLI.
 	 *
 	 * ## OPTIONS
@@ -34,17 +40,27 @@ class WPB_Import_Menu_Command extends WP_CLI_Command {
 	 * <file>
 	 * : The exported menu JSON file.
 	 *
+	 * [--overwrite]
+	 * : Overwrite the existent menus
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Import a menu.
 	 *     $ wp menu import my-menu.json
+	 *
+	 *     # Import a menu with overriding the existent ones.
+	 *     $ wp menu import my-menu.json --overwrite
 	 */
-	public function __invoke( $args ) {
+	public function __invoke( $args, $assoc_args ) {
 		list( $file ) = $args;
 
 		if ( ! file_exists( $file ) ) {
 			WP_CLI::error( 'File to import doesn\'t exist.' );
 		}
+
+		$args = wp_parse_args( $assoc_args );
+
+		$this->overwrite_menus = isset( $args['overwrite'] );
 
 		$menu_imported = $this->import( $file );
 
