@@ -136,6 +136,8 @@ trait WPB_Menu_Import {
 	 * Get menu data by custom url.
 	 *
 	 * @since  0.1.0
+	 * @since  0.1.1   Get the menu advanced properties.
+	 *
 	 * @access private
 	 *
 	 * @param  array   $menu_item   The current menu item data.
@@ -143,18 +145,21 @@ trait WPB_Menu_Import {
 	 * @return array                The menu data.
 	 */
 	private function get_menu_data_by_custom( $menu_item, $defaults ) {
-		$url = $menu_item['url'];
-
-		return array(
+		$url              = $menu_item['url'];
+		$basic_properties = array(
 			'menu-item-url'   => 'http' === substr( $url, 0, 4 ) ? esc_url( $url ) : home_url( $url ),
 			'menu-item-title' => $defaults['menu-item-title'] ?: $menu_item['url'],
 		);
+
+		return array_merge( $basic_properties, $this->get_advanced_menu_properties( $menu_item ) );
 	}
 
 	/**
 	 * Get menu data by taxonomy.
 	 *
 	 * @since  0.1.0
+	 * @since  0.1.1   Get the menu advanced properties.
+	 *
 	 * @access private
 	 *
 	 * @param  array   $menu_item   The current menu item data.
@@ -168,18 +173,22 @@ trait WPB_Menu_Import {
 			return array();
 		}
 
-		return array(
+		$basic_properties = array(
 			'menu-item-type'      => 'taxonomy',
 			'menu-item-object'    => $term->taxonomy,
 			'menu-item-object-id' => $term->term_id,
 			'menu-item-title'     => $defaults['menu-item-title'] ?: $term->name,
 		);
+
+		return array_merge( $basic_properties, $this->get_advanced_menu_properties( $menu_item ) );
 	}
 
 	/**
 	 * Get menu data by post type.
 	 *
 	 * @since  0.1.0
+	 * @since  0.1.1   Get the menu advanced properties.
+	 *
 	 * @access private
 	 *
 	 * @param  array   $menu_item   The current menu item data.
@@ -198,11 +207,37 @@ trait WPB_Menu_Import {
 			return array();
 		}
 
-		return array(
+		$basic_properties = array(
 			'menu-item-type'      => 'post_type',
 			'menu-item-object'    => 'page',
 			'menu-item-object-id' => $pages[0]->ID,
 			'menu-item-title'     => $defaults['menu-item-title'] ?: $pages[0]->post_title,
+		);
+
+		return array_merge( $basic_properties, $this->get_advanced_menu_properties( $menu_item ) );
+	}
+
+	/**
+	 * Get the menu advanced properties.
+	 *
+	 * Those properties are: Link Target, Title Attribute, CSS Classes,
+	 * Link Relationship (XFN), and Description.
+	 *
+	 * These properties are inside of the Screen Options box.
+	 *
+	 * @since  0.1.1
+	 * @access private
+	 *
+	 * @param  array   $menu_item   The current menu item data.
+	 * @return array                The current menu advanced properties.
+	 */
+	private function get_advanced_menu_properties( $menu_item ) {
+		return array(
+			'menu-item-target'      => $menu_item['target'],
+			'menu-item-attr-title'  => $menu_item['attr_title'],
+			'menu-item-description' => $menu_item['description'],
+			'menu-item-classes'     => implode( ' ', $menu_item['classes'] ),
+			'menu-item-xfn'         => $menu_item['xfn'],
 		);
 	}
 
