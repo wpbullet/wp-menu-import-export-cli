@@ -8,6 +8,8 @@ trait WPB_Menu_Export {
 	 * passed options in the command.
 	 *
 	 * @since  0.1.0
+	 * @since  0.1.1   Includes the advanced menu properties to the export file.
+	 *
 	 * @access private
 	 *
 	 * @param  array   $args         The required arguments.
@@ -47,10 +49,15 @@ trait WPB_Menu_Export {
 
 			foreach ( $items as $item ) {
 				$export_item = array(
-					'slug'   => $item->ID,
-					'parent' => $item->menu_item_parent,
-					'title'  => $item->title,
-					'type'   => $item->type,
+					'slug'        => $item->ID,
+					'parent'      => $item->menu_item_parent,
+					'title'       => $item->title,
+					'type'        => $item->type,
+					'target'      => $item->target,
+					'attr_title'  => $item->attr_title,
+					'description' => $item->description,
+					'classes'     => $item->classes,
+					'xfn'         => $item->xfn,
 				);
 
 				switch ( $item->type ) {
