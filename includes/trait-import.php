@@ -159,6 +159,7 @@ trait WPB_Menu_Import {
 	 *
 	 * @since  0.1.0
 	 * @since  0.1.1   Get the menu advanced properties.
+	 * @since  0.1.2   Find the term object by id instead of name.
 	 *
 	 * @access private
 	 *
