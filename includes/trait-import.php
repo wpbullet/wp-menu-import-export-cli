@@ -167,7 +167,7 @@ trait WPB_Menu_Import {
 	 * @return array                The menu data.
 	 */
 	private function get_menu_data_by_taxonomy( $menu_item, $defaults ) {
-		$term = get_term_by( 'name', $menu_item['term'], $menu_item['taxonomy'] );
+		$term = get_term_by( 'id', $menu_item['term'], $menu_item['taxonomy'] );
 
 		if ( ! $term ) {
 			return array();
