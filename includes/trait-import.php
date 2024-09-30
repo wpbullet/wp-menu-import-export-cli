@@ -49,12 +49,19 @@ trait WPB_Menu_Import {
 		}
 
 		foreach ( $menu['items'] as $menu_item ) {
-			$get_method          = 'get_menu_data_by_' . $menu_item['type'];
 			$menu_data_defaults  = array(
 				'menu-item-title'  => isset( $menu_item['title'] ) ? $menu_item['title'] : false,
 				'menu-item-status' => 'publish',
 			);
-			$menu_data_raw       = $this->$get_method( $menu_item, $menu_data_defaults );
+
+			$get_method = 'get_menu_data_by_' . $menu_item['type'];
+
+			if ( method_exists( $this, $get_method ) ) {
+				$menu_data_raw = $this->$get_method( $menu_item, $menu_data_defaults );
+			} else {
+				WP_CLI::log( 'The submenu type "' . $menu_item['type'] . '" is not supported. The menu item "' . $menu_item['title'] . '" will be skipped.' );
+				continue;
+			}
 
 			if ( empty( $menu_data_raw ) ) {
 				WP_CLI::log( 'The submenu item "' . $menu_item['title'] . '" does not have any data.' );

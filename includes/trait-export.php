@@ -65,17 +65,30 @@ trait WPB_Menu_Export {
 						$export_item['url'] = $item->url;
 						break;
 					case 'post_type':
-						$post                     = get_post( $item->object_id );
-						$export_item['page']      = $post->post_name;
-						$export_item['post_type'] = $post->post_type;
+						$post = get_post( $item->object_id );
+						if ( $post ) {
+							$export_item['page']      = $post->post_name;
+							$export_item['post_type'] = $post->post_type;
+						} else {
+							WP_CLI::warning( 'The post object for menu item "' . $item->title . '" could not be found.' );
+							continue 2;
+						}
 						break;
 					case 'taxonomy':
-						$term                    = get_term( $item->object_id, $item->object );
-						$export_item['taxonomy'] = $term->taxonomy;
-						$export_item['term']     = $term->term_id;
+						$term = get_term( $item->object_id, $item->object );
+						if ( $term && ! is_wp_error( $term ) ) {
+							$export_item['taxonomy'] = $term->taxonomy;
+							$export_item['term']     = $term->term_id;
+						} else {
+							WP_CLI::warning( 'The taxonomy term for menu item "' . $item->title . '" could not be found.' );
+							continue 2;
+						}
 						break;
+					default:
+						WP_CLI::warning( 'Unknown menu item type "' . $item->type . '" for menu item "' . $item->title . '". The element will be skipped.' );
+						continue 2;
 				}
-
+			
 				$export_menu['items'][] = $export_item;
 			}
 
